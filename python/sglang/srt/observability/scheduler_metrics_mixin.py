@@ -741,16 +741,28 @@ class SchedulerMetricsMixin:
         if self.is_hybrid_swa:
             full_num_used, swa_num_used, *_ = self._get_swa_token_info()
             num_used_tokens = max(full_num_used, swa_num_used)
+            token_usage = (
+                num_used_tokens / self.max_total_num_tokens
+                if self.max_total_num_tokens > 0
+                else 0.0
+            )
         elif self.is_hybrid_ssm:
-            num_used_tokens = self._get_mamba_token_info()[0]
+            (
+                full_num_used,
+                _,
+                full_token_usage,
+                mamba_usage,
+                *_,
+            ) = self._get_mamba_token_info()
+            num_used_tokens = full_num_used
+            token_usage = max(full_token_usage, mamba_usage)
         else:
             num_used_tokens = self._get_token_info()[0]
-
-        token_usage = (
-            num_used_tokens / self.max_total_num_tokens
-            if self.max_total_num_tokens > 0
-            else 0.0
-        )
+            token_usage = (
+                num_used_tokens / self.max_total_num_tokens
+                if self.max_total_num_tokens > 0
+                else 0.0
+            )
 
         memory = None
         if include_all or "memory" in include:
